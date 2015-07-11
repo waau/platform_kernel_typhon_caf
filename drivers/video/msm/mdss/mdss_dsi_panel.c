@@ -25,6 +25,7 @@
 
 #include "mdss_dsi.h"
 #include "mdss_dba_utils.h"
+#include "mdss_livedisplay.h"
 #if IS_ENABLED(CONFIG_LGE_DISPLAY_READER_MODE)
 #include "lge/lge_reader_mode.h"
 #endif
@@ -1410,6 +1411,10 @@ static int mdss_dsi_panel_on(struct mdss_panel_data *pdata)
 
 	if (pinfo->compression_mode == COMPRESSION_DSC)
 		mdss_dsi_panel_dsc_pps_send(ctrl, pinfo);
+
+	if (pdata->event_handler)
+		pdata->event_handler(pdata, MDSS_EVENT_UPDATE_LIVEDISPLAY,
+				(void *)(unsigned long) MODE_UPDATE_ALL);
 
 	if (ctrl->ds_registered)
 		mdss_dba_utils_video_on(pinfo->dba_data, pinfo);
@@ -3353,6 +3358,8 @@ static int mdss_panel_parse_dt(struct device_node *np,
 	mdss_dsi_parse_panel_horizintal_line_idle(np, ctrl_pdata);
 
 	mdss_dsi_parse_dfps_config(np, ctrl_pdata);
+
+	mdss_livedisplay_parse_dt(np, pinfo);
 
 	pinfo->is_dba_panel = of_property_read_bool(np,
 			"qcom,dba-panel");
