@@ -4,4 +4,4 @@ config LGE_ALICE_FRIENDS
         help
           Say Y here to use Alice Friends
 
-        default y
+        default n

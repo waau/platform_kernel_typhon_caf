@@ -367,12 +367,13 @@ struct usb_bus {
 
 	int devnum_next;		/* Next open device number in
 					 * round-robin allocation */
-	struct mutex devnum_next_mutex; /* devnum_next mutex */
 
 	struct usb_devmap devmap;	/* device address allocation map */
 	struct usb_device *root_hub;	/* Root hub */
 	struct usb_bus *hs_companion;	/* Companion EHCI bus, if any */
 	struct list_head bus_list;	/* list of busses */
+
+	struct mutex usb_address0_mutex; /* unaddressed device mutex */
 
 	int bandwidth_allocated;	/* on this bus: how much of the time
 					 * reserved for periodic (intr/iso)
@@ -734,17 +735,6 @@ static inline bool usb_device_no_sg_constraint(struct usb_device *udev)
 
 /* for drivers using iso endpoints */
 extern int usb_get_current_frame_number(struct usb_device *usb_dev);
-extern int usb_sec_event_ring_setup(struct usb_device *dev,
-	unsigned intr_num);
-extern int usb_sec_event_ring_cleanup(struct usb_device *dev,
-	unsigned intr_num);
-
-extern dma_addr_t
-usb_get_sec_event_ring_dma_addr(struct usb_device *dev,
-		unsigned intr_num);
-extern dma_addr_t usb_get_dcba_dma_addr(struct usb_device *dev);
-extern dma_addr_t usb_get_xfer_ring_dma_addr(struct usb_device *dev,
-	struct usb_host_endpoint *ep);
 
 /* Sets up a group of bulk endpoints to support multiple stream IDs. */
 extern int usb_alloc_streams(struct usb_interface *interface,
@@ -1079,7 +1069,7 @@ struct usbdrv_wrap {
  *	for interfaces bound to this driver.
  * @soft_unbind: if set to 1, the USB core will not kill URBs and disable
  *	endpoints before calling the driver's disconnect method.
- * @disable_hub_initiated_lpm: if set to 1, the USB core will not allow hubs
+ * @disable_hub_initiated_lpm: if set to 0, the USB core will not allow hubs
  *	to initiate lower power link state transitions when an idle timeout
  *	occurs.  Device-initiated USB 3.0 link PM will still be allowed.
  *
@@ -1916,6 +1906,16 @@ enum usb_led_event {
 extern void usb_led_activity(enum usb_led_event ev);
 #else
 static inline void usb_led_activity(enum usb_led_event ev) {}
+#endif
+
+#ifdef CONFIG_LGE_ALICE_FRIENDS
+extern bool alice_friends_hm;
+extern bool alice_friends_hm_earjack;
+extern atomic_t in_call_status;
+#define IS_ALICE_FRIENDS_HM_ON() \
+	(alice_friends_hm && alice_friends_hm_earjack)
+
+extern int alice_friends_hm_reset(void);
 #endif
 
 #endif  /* __KERNEL__ */

@@ -336,7 +336,7 @@ int usb_submit_urb(struct urb *urb, gfp_t mem_flags)
 	if (!urb || !urb->complete)
 		return -EINVAL;
 	if (urb->hcpriv) {
-		WARN_ONCE(1, "URB %pK submitted while active\n", urb);
+		WARN_ONCE(1, "URB %p submitted while active\n", urb);
 		return -EBUSY;
 	}
 
@@ -665,6 +665,11 @@ void usb_kill_urb(struct urb *urb)
 	atomic_inc(&urb->reject);
 
 	usb_hcd_unlink_urb(urb, -ENOENT);
+#ifdef CONFIG_LGE_USB_G_ANDROID
+	if(system_state == SYSTEM_POWER_OFF || system_state == SYSTEM_RESTART)
+		wait_event_timeout(usb_kill_urb_queue, atomic_read(&urb->use_count) == 0, 100);
+	else
+#endif
 	wait_event(usb_kill_urb_queue, atomic_read(&urb->use_count) == 0);
 
 	atomic_dec(&urb->reject);
