@@ -3,27 +3,7 @@
 
 #ifdef CONFIG_LGE_PM_LGE_POWER_CLASS_BOARD_REVISION
 #else
-#if defined(CONFIG_MACH_MSM8996_LUCYE)
-enum hw_rev_type {
-	HW_REV_EVB1 = 0,
-	HW_REV_EVB2,
-	HW_REV_EVB3,
-	HW_REV_0,
-	HW_REV_0_1,
-	HW_REV_0_2,
-	HW_REV_0_3,
-	HW_REV_0_4,
-	HW_REV_A,
-	HW_REV_B,
-	HW_REV_C,
-	HW_REV_D,
-	HW_REV_1_0,
-	HW_REV_1_1,
-	HW_REV_1_2,
-	HW_REV_1_3,
-	HW_REV_MAX
-};
-#elif defined(CONFIG_MACH_MSM8996_ELSA)
+#if defined(CONFIG_MACH_MSM8996_ELSA)
 enum hw_rev_type {
 	HW_REV_EVB1 = 0,
 	HW_REV_EVB2,
@@ -91,7 +71,7 @@ struct pre_selfd_platform_data {
 	int (*get_values) (int *r, int *g, int *b);
 };
 #endif
-//#ifdef CONFIG_LGE_USB_FACTORY
+#ifdef CONFIG_LGE_USB_FACTORY
 enum lge_boot_mode_type {
 	LGE_BOOT_MODE_NORMAL = 0,
 	LGE_BOOT_MODE_CHARGER,
@@ -109,7 +89,7 @@ enum lge_boot_mode_type lge_get_boot_mode(void);
 int lge_get_android_dlcomplete(void);
 int lge_get_factory_boot(void);
 int get_lge_frst_status(void);
-//#endif
+#endif
 
 int lge_get_mfts_mode(void);
 
@@ -119,10 +99,7 @@ extern int lge_get_bootreason(void);
 extern int lge_get_bootreason_with_lcd_dimming(void);
 #endif
 
-extern int lge_get_fota_mode(void);
-extern char* lge_get_boot_partition(void);
-
-#if defined(CONFIG_LGE_EARJACK_DEBUGGER) || defined(CONFIG_LGE_USB_DEBUGGER)
+#ifdef CONFIG_LGE_EARJACK_DEBUGGER
 /* config */
 #define UART_CONSOLE_ENABLE_ON_EARJACK		BIT(0)
 #define UART_CONSOLE_ENABLE_ON_EARJACK_DEBUGGER	BIT(1)
@@ -219,7 +196,7 @@ int lge_get_panel(void);
 void lge_set_panel(int);
 #endif
 
-//#if defined(CONFIG_LGE_PANEL_MAKER_ID_SUPPORT)
+#if defined(CONFIG_LGE_PANEL_MAKER_ID_SUPPORT)
 enum panel_maker_id_type {
 	LGD_LG4946 = 0,
 	LGD_LG4945,
@@ -229,7 +206,7 @@ enum panel_maker_id_type {
 };
 
 enum panel_maker_id_type lge_get_panel_maker_id(void);
-//#endif
+#endif
 
 #if defined(CONFIG_LGE_DISPLAY_COMMON)
 enum panel_revision_id_type {

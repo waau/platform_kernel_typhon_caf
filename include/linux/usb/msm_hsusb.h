@@ -2,7 +2,7 @@
  *
  * Copyright (C) 2008 Google, Inc.
  * Author: Brian Swetland <swetland@google.com>
- * Copyright (c) 2009-2017, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2009-2016, The Linux Foundation. All rights reserved.
  *
  * This software is licensed under the terms of the GNU General Public
  * License version 2, as published by the Free Software Foundation, and
@@ -336,7 +336,9 @@ struct msm_otg_platform_data {
 #define PHY_CHARGER_CONNECTED		BIT(3)
 #define PHY_VBUS_VALID_OVERRIDE		BIT(4)
 #define DEVICE_IN_SS_MODE		BIT(5)
-
+#ifdef CONFIG_LGE_USB_G_ANDROID
+#define PHY_OTG_MODE			BIT(6)
+#endif
 #define USB_NUM_BUS_CLOCKS      3
 
 /**

@@ -10,9 +10,9 @@
 #include <linux/platform_device.h>
 #include <asm/system_misc.h>
 
-//#ifdef CONFIG_LGE_USB_FACTORY
+#ifdef CONFIG_LGE_USB_FACTORY
 #include <linux/platform_data/lge_android_usb.h>
-//#endif
+#endif
 #ifdef CONFIG_LGE_ALICE_FRIENDS
 #include <soc/qcom/lge/lge_acc_nt_type.h>
 #endif
@@ -67,11 +67,7 @@ int display_panel_type;
 
 #ifdef CONFIG_LGE_PM_LGE_POWER_CLASS_BOARD_REVISION
 #else
-#if defined(CONFIG_MACH_MSM8996_LUCYE)
-char *rev_str[] = {"evb1", "evb2", "evb3", "rev_0", "rev_01", "rev_02", "rev_03", "rev_04",
-	"rev_a", "rev_b", "rev_c", "rev_d", "rev_10", "rev_11", "rev_12", "rev_13",
-	"reserved"};
-#elif defined(CONFIG_MACH_MSM8996_ELSA)
+#if defined(CONFIG_MACH_MSM8996_ELSA)
 char *rev_str[] = {"evb1", "evb2", "evb3", "rev_0", "rev_01", "rev_02", "rev_a", "rev_b",
 	"rev_c", "rev_d", "rev_e", "rev_f", "rev_10", "rev_11", "rev_12", "rev_13",
 	"reserved"};
@@ -221,7 +217,7 @@ int lge_get_panel(void)
 }
 #endif
 
-#if defined(CONFIG_LGE_EARJACK_DEBUGGER) || defined(CONFIG_LGE_USB_DEBUGGER)
+#ifdef CONFIG_LGE_EARJACK_DEBUGGER
 /* s_uart_console_status bits format
  * ------higher than bit4 are not used
  * bit5...: not used
@@ -273,7 +269,7 @@ void lge_uart_console_set_ready(unsigned int ready)
 
 #endif /* CONFIG_LGE_EARJACK_DEBUGGER */
 
-//#ifdef CONFIG_LGE_USB_FACTORY
+#ifdef CONFIG_LGE_USB_FACTORY
 /* get boot mode information from cmdline.
  * If any boot mode is not specified,
  * boot mode is normal type.
@@ -364,7 +360,7 @@ int get_factory_cable(void)
 
 	return res;
 }
-EXPORT_SYMBOL(get_factory_cable);
+
 struct lge_android_usb_platform_data lge_android_usb_pdata = {
 	.vendor_id = 0x1004,
 	.factory_pid = 0x6000,
@@ -388,7 +384,7 @@ static int __init lge_android_usb_devices_init(void)
 	return platform_device_register(&lge_android_usb_device);
 }
 arch_initcall(lge_android_usb_devices_init);
-//#endif
+#endif
 
 #ifdef CONFIG_LGE_USB_DIAG_LOCK
 static struct platform_device lg_diag_cmd_device = {
@@ -566,35 +562,3 @@ enum lge_alice_friends lge_get_alice_friends(void)
 	return lge_alice_friends;
 }
 #endif
-
-static int android_fota = 0;
-
-int lge_get_fota_mode(void)
-{
-	return android_fota;
-}
-
-int __init lge_android_fota(char *s)
-{
-	if(!strncmp(s,"true",strlen("true")) == 0)
-		android_fota = 1;
-	else
-		android_fota = 0;
-
-	return 1;
-}
-__setup("androidboot.fota=", lge_android_fota);
-
-static char lge_boot_partition_str[16] = "none";
-
-char* lge_get_boot_partition(void)
-{
-	return lge_boot_partition_str;
-}
-
-int __init lge_boot_partition(char *s)
-{
-	strncpy(lge_boot_partition_str, s, 16);
-	return 1;
-}
-__setup("lge.boot.partition=", lge_boot_partition);

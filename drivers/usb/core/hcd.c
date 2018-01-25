@@ -1643,7 +1643,11 @@ int usb_hcd_unlink_urb (struct urb *urb, int status)
 		if (retval == 0)
 			retval = -EINPROGRESS;
 		else if (retval != -EIDRM && retval != -EBUSY)
+<<<<<<< HEAD
 			dev_dbg(&udev->dev, "hcd_unlink_urb %pK fail %d\n",
+=======
+			dev_dbg(&udev->dev, "hcd_unlink_urb %p fail %d\n",
+>>>>>>> e82d3aef780... treewide: Full LG QuickCharge implementation
 					urb, retval);
 		usb_put_dev(udev);
 	}
@@ -1812,7 +1816,11 @@ rescan:
 		/* kick hcd */
 		unlink1(hcd, urb, -ESHUTDOWN);
 		dev_dbg (hcd->self.controller,
+<<<<<<< HEAD
 			"shutdown urb %pK ep%d%s%s\n",
+=======
+			"shutdown urb %p ep%d%s%s\n",
+>>>>>>> e82d3aef780... treewide: Full LG QuickCharge implementation
 			urb, usb_endpoint_num(&ep->desc),
 			is_in ? "in" : "out",
 			({	char *s;
@@ -2154,6 +2162,7 @@ int usb_hcd_get_frame_number (struct usb_device *udev)
 	return hcd->driver->get_frame_number (hcd);
 }
 
+<<<<<<< HEAD
 int usb_hcd_sec_event_ring_setup(struct usb_device *udev,
 	unsigned intr_num)
 {
@@ -2213,6 +2222,10 @@ usb_hcd_get_xfer_ring_dma_addr(struct usb_device *udev,
 	return hcd->driver->get_xfer_ring_dma_addr(hcd, udev, ep);
 }
 
+=======
+/*-------------------------------------------------------------------------*/
+
+>>>>>>> e82d3aef780... treewide: Full LG QuickCharge implementation
 #ifdef	CONFIG_PM
 
 int hcd_bus_suspend(struct usb_device *rhdev, pm_message_t msg)
@@ -2932,9 +2945,12 @@ void usb_remove_hcd(struct usb_hcd *hcd)
 	cancel_work_sync(&hcd->wakeup_work);
 #endif
 
+<<<<<<< HEAD
 	/* handle any pending hub events before XHCI stops */
 	usb_flush_hub_wq();
 
+=======
+>>>>>>> e82d3aef780... treewide: Full LG QuickCharge implementation
 	mutex_lock(&usb_bus_list_lock);
 	usb_disconnect(&rhdev);		/* Sets rhdev to NULL */
 	mutex_unlock(&usb_bus_list_lock);
