@@ -39,7 +39,7 @@
 			reg = <0>;
 			qcom,supply-name = "lab";
 			qcom,supply-min-voltage = <4600000>;
-			qcom,supply-max-voltage = <5500000>;
+			qcom,supply-max-voltage = <6000000>;
 			qcom,supply-enable-load = <100000>;
 			qcom,supply-disable-load = <100>;
 		};
@@ -48,7 +48,7 @@
 			reg = <1>;
 			qcom,supply-name = "ibb";
 			qcom,supply-min-voltage = <4600000>;
-			qcom,supply-max-voltage = <5500000>;
+			qcom,supply-max-voltage = <6000000>;
 			qcom,supply-enable-load = <100000>;
 			qcom,supply-disable-load = <100>;
 			qcom,supply-post-on-sleep = <20>;
