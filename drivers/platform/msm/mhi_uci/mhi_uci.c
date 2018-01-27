@@ -1139,7 +1139,7 @@ static int mhi_uci_init(void)
 				"Failed to init client attributes\n");
 		return -EIO;
 	}
-#endif
+#ifdef CONFIG_IPC_LOGGING
 	uci_ctxt.ctrl_chan_id = MHI_CLIENT_IP_CTRL_1_OUT;
 
 	uci_log(UCI_DBG_INFO, "Registering for MHI events.\n");
