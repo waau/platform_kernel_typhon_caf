@@ -181,12 +181,12 @@ struct csiphy_device {
 	uint32_t csiphy_sof_debug;
 	uint32_t csiphy_sof_debug_count;
 	struct camera_vreg_t *csiphy_vreg;
-	struct msm_csiphy_timer_t csiphy_timer;
 	struct regulator *csiphy_reg_ptr[MAX_REGULATOR];
 	int32_t regulator_count;
 
 #ifdef CONFIG_MACH_LGE
 	struct regulator* csiphy_reg;    /* LGE_CHANGE, CST, added gdsc regulator */
+	struct msm_csiphy_timer_t csiphy_timer;	/* LGE_CHANGE, CST, added csiphy timer */
 #endif
 };
 

@@ -1,4 +1,4 @@
-/* Copyright (c) 2014-2017, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2014 - 2016, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -39,19 +39,6 @@ DEFINE_MSM_MUTEX(msm_ois_mutex);
 #endif
 
 #ifdef CONFIG_LG_OIS
-static struct msm_ois_ctrl_t *local_msm_ois_t;
-#ifdef CONFIG_MACH_MSM8996_LUCYE
-uint16_t cal_ver = 0;
-uint16_t map_ver = 0;
-uint16_t eeprom_slave_id = 0;
-#define OIS_MAKER_ID_ADDR	(0xbe0)
-#define CAL_VERSION (0xac2)
-#define MAP_VERSION (0xbe2)
-extern void lgit_imx258_rohm_ois_init(struct msm_ois_ctrl_t *msm_ois_t);
-extern void lgit_imx258_claf_rohm_ois_init(struct msm_ois_ctrl_t *msm_ois_t);
-extern void imt_imx258_rohm_ois_init(struct msm_ois_ctrl_t *msm_ois_t);
-extern void lc898122a_af_vcm_code(int16_t UsVcmCod);
-#else
 #define OIS_MAKER_ID_ADDR	(0x700)
 
 #define EEPROM_SLAVE_ID (0x54) //0xA8 >> 1
@@ -67,7 +54,9 @@ extern void lc898122a_af_vcm_code(int16_t UsVcmCod);
 extern void lgit_imx298_rohm_ois_init(struct msm_ois_ctrl_t *msm_ois_t);
 extern void lc898122a_af_vcm_code(int16_t UsVcmCod);
 #endif
-#endif
+
+
+static struct msm_ois_ctrl_t *local_msm_ois_t;
 #endif
 
 static struct v4l2_file_operations msm_ois_v4l2_subdev_fops;
@@ -387,7 +376,6 @@ static int msm_ois_init(struct msm_ois_ctrl_t *o_ctrl)
 #if defined(CONFIG_IMX234) || defined(CONFIG_MACH_MSM8996_ELSA)
 	uint16_t vcm_ver = 0;
 #endif
-    int32_t ret = 0;
 #endif
 
 	CDBG("Enter\n");
@@ -404,43 +392,11 @@ static int msm_ois_init(struct msm_ois_ctrl_t *o_ctrl)
 			pr_err("cci_init failed\n");
 	}
 
-#ifdef CONFIG_LG_OIS
-#ifdef CONFIG_MACH_MSM8996_LUCYE
-	o_ctrl->i2c_client.cci_client->i2c_freq_mode = I2C_FAST_PLUS_MODE;
-#endif
-	ret = ois_i2c_e2p_read(OIS_MAKER_ID_ADDR, &chipid, 1);
+	#ifdef CONFIG_LG_OIS
+	ois_i2c_e2p_read(OIS_MAKER_ID_ADDR, &chipid, 1);
 
 	switch (chipid)
 	{
-#if	defined(CONFIG_MACH_MSM8996_LUCYE)
-		case 0x01:
-		case 0x02:
-		case 0x05:
-			ois_i2c_e2p_read(MAP_VERSION, &map_ver, 1);
-			rc = ois_i2c_e2p_read(CAL_VERSION, &cal_ver, 2);// for check vcm
-			if(map_ver == 0x01 && cal_ver == 0x02){
-				lgit_imx258_rohm_ois_init(o_ctrl);
-				}else{
-				lgit_imx258_claf_rohm_ois_init(o_ctrl);
-				}
-				local_msm_ois_t->sid_ois = o_ctrl->sid_ois;
-				if (cal_ver != 0x02 && cal_ver != 0x05 && cal_ver != 0x06 && cal_ver != 0x07 && cal_ver != 0x09) {
-				printk("%s: kernel ois not supported, rc(%d) cal_ver(%d) \n", __func__, rc, cal_ver);
-				return OIS_INIT_NOT_SUPPORTED;
-				}
-				printk("%s : LGIT rohm i2c shift addr 0x%x!\n", __func__, o_ctrl->sid_ois);
-				break;
-		case 0x14:
-			imt_imx258_rohm_ois_init(o_ctrl);
-			local_msm_ois_t->sid_ois = o_ctrl->sid_ois;
-			rc = ois_i2c_e2p_read(CAL_VERSION, &cal_ver, 2); // for check vcm
-				if (cal_ver != 0x41 && cal_ver != 0x0406 && cal_ver != 0x0507) {
-				printk("%s: kernel ois not supported, rc(%d) cal_ver(%d) \n", __func__, rc, cal_ver);
-				return OIS_INIT_NOT_SUPPORTED;
-				}
-				printk("%s : IMT rohm i2c shift addr 0x%x!\n", __func__, o_ctrl->sid_ois);
-				break;
-#else
 #if defined(CONFIG_IMX234)
 	case 0x01:
 #if 0
@@ -494,7 +450,6 @@ static int msm_ois_init(struct msm_ois_ctrl_t *o_ctrl)
 	case 0x03:
 		printk("%s : FujiFilm OIS module!\n", __func__);
 		break;
-#endif
 	default:
 		printk("%s : unknown module! maker id = %d\n", __func__, chipid);
 		return -EINVAL;
@@ -602,9 +557,6 @@ static int32_t msm_ois_config(struct msm_ois_ctrl_t *o_ctrl,
 	CDBG("%s type %d\n", __func__, cdata->cfgtype);
 	switch (cdata->cfgtype) {
 	case CFG_OIS_INIT:
-#ifdef CONFIG_MACH_MSM8996_LUCYE
-		eeprom_slave_id = cdata->eeprom_slave_addr >> 1;
-#endif
 		rc = msm_ois_init(o_ctrl);
 		if (rc < 0)
 			pr_err("msm_ois_init failed %d\n", rc);
@@ -673,8 +625,7 @@ static int32_t msm_ois_config(struct msm_ois_ctrl_t *o_ctrl,
 			break;
 		}
 
-		if (!conf_array.size ||
-			conf_array.size > I2C_SEQ_REG_DATA_MAX) {
+		if (!conf_array.size) {
 			pr_err("%s:%d failed\n", __func__, __LINE__);
 			rc = -EFAULT;
 			break;
@@ -861,13 +812,11 @@ static long msm_ois_subdev_ioctl(struct v4l2_subdev *sd,
 			pr_err("o_ctrl->i2c_client.i2c_func_tbl NULL\n");
 			return -EINVAL;
 		}
-		mutex_lock(o_ctrl->ois_mutex);
 		rc = msm_ois_power_down(o_ctrl);
 		if (rc < 0) {
 			pr_err("%s:%d OIS Power down failed\n",
 				__func__, __LINE__);
 		}
-		mutex_unlock(o_ctrl->ois_mutex);
 		return msm_ois_close(sd, NULL);
 	default:
 		return -ENOIOCTLCMD;
@@ -1022,14 +971,11 @@ static long msm_ois_subdev_do_ioctl(
 	u32 = (struct msm_ois_cfg_data32 *)arg;
 	parg = arg;
 
-#ifdef CONFIG_MACH_MSM8996_LUCYE
-	ois_data.eeprom_slave_addr = u32->eeprom_slave_addr;
-#endif
+	ois_data.cfgtype = u32->cfgtype;
 
 	switch (cmd) {
 	case VIDIOC_MSM_OIS_CFG32:
 		cmd = VIDIOC_MSM_OIS_CFG;
-		ois_data.cfgtype = u32->cfgtype;
 
 		switch (u32->cfgtype) {
 		case CFG_OIS_CONTROL:
@@ -1063,6 +1009,7 @@ static long msm_ois_subdev_do_ioctl(
 			settings.reg_setting =
 				compat_ptr(settings32.reg_setting);
 
+			ois_data.cfgtype = u32->cfgtype;
 			ois_data.cfg.settings = &settings;
 			parg = &ois_data;
 			break;
@@ -1083,10 +1030,6 @@ static long msm_ois_subdev_do_ioctl(
 			parg = &ois_data;
 			break;
 		}
-		break;
-	case VIDIOC_MSM_OIS_CFG:
-		pr_err("%s: invalid cmd 0x%x received\n", __func__, cmd);
-		return -EINVAL;
 	}
 	rc = msm_ois_subdev_ioctl(sd, cmd, parg);
 
@@ -1198,12 +1141,7 @@ int32_t ois_i2c_e2p_write(uint16_t addr, uint16_t data, enum msm_camera_i2c_data
 	struct msm_camera_cci_client *cci_client = NULL;
 
 	cci_client = local_msm_ois_t->i2c_eeprom_client.cci_client;
-#if defined(CONFIG_MACH_MSM8996_LUCYE)
-	cci_client->sid = eeprom_slave_id;
-	cci_client->i2c_freq_mode = I2C_FAST_PLUS_MODE;
-#else
 	cci_client->sid = EEPROM_SLAVE_ID; //0xA0 >> 1;
-#endif
 	cci_client->retries = 3;
 	cci_client->id_map = 0;
 	cci_client->cci_i2c_master = local_msm_ois_t->cci_master;
@@ -1219,12 +1157,7 @@ int32_t ois_i2c_e2p_read(uint16_t addr, uint16_t *data, enum msm_camera_i2c_data
 
 
 	cci_client = local_msm_ois_t->i2c_eeprom_client.cci_client;
-#if defined(CONFIG_MACH_MSM8996_LUCYE)
-	cci_client->sid = eeprom_slave_id;
-	cci_client->i2c_freq_mode = I2C_FAST_PLUS_MODE;
-#else
 	cci_client->sid = EEPROM_SLAVE_ID; //0xA0 >> 1;
-#endif
 	cci_client->retries = 3;
 	cci_client->id_map = 0;
 	cci_client->cci_i2c_master = local_msm_ois_t->cci_master;
@@ -1240,12 +1173,7 @@ int32_t ois_i2c_e2p_read_seq(uint32_t addr, uint8_t *data, uint32_t num_byte)
 
 
 	cci_client = local_msm_ois_t->i2c_eeprom_client.cci_client;
-#if defined(CONFIG_MACH_MSM8996_LUCYE)
-	cci_client->sid = eeprom_slave_id;
-	cci_client->i2c_freq_mode = I2C_FAST_PLUS_MODE;
-#else
 	cci_client->sid = EEPROM_SLAVE_ID; //0xA0 >> 1;
-#endif
 	cci_client->retries = 3;
 	cci_client->id_map = 0;
 	cci_client->cci_i2c_master = local_msm_ois_t->cci_master;
