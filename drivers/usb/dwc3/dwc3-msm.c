@@ -4949,8 +4949,7 @@ static void dwc3_otg_sm_work(struct work_struct *w)
 			dwc->evp_usbctrl_err_cnt = 0;
 #endif
 			mdwc->typec_current_max = 0;
-			if (mdwc->chg_type != DWC3_INVALID_CHARGER)
-				dwc3_msm_gadget_vbus_draw(mdwc, 0);
+			dwc3_msm_gadget_vbus_draw(mdwc, 0);
 			dev_dbg(mdwc->dev, "No device, allowing suspend\n");
 		}
 		break;
