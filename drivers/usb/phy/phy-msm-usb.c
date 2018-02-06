@@ -746,12 +746,24 @@ static int msm_otg_reset(struct usb_phy *phy)
 	}
 	motg->reset_counter++;
 
+	disable_irq(motg->irq);
+	if (motg->phy_irq)
+		disable_irq(motg->phy_irq);
+
 	ret = msm_otg_phy_reset(motg);
 	if (ret) {
 		dev_err(phy->dev, "phy_reset failed\n");
+		if (motg->phy_irq)
+			enable_irq(motg->phy_irq);
+
+		enable_irq(motg->irq);
 		return ret;
 	}
 
+	if (motg->phy_irq)
+		enable_irq(motg->phy_irq);
+
+	enable_irq(motg->irq);
 	ret = msm_otg_link_reset(motg);
 	if (ret) {
 		dev_err(phy->dev, "link reset failed\n");
@@ -805,15 +817,9 @@ static int msm_otg_reset(struct usb_phy *phy)
 							USB_HS_APF_CTRL);
 
 	/*
-	 * Enable USB BAM if USB BAM is enabled already before block reset as
-	 * block reset also resets USB BAM registers.
+	 * Disable USB BAM as block reset resets USB BAM registers.
 	 */
-	if (test_bit(ID, &motg->inputs)) {
-		msm_usb_bam_enable(CI_CTRL,
-				   phy->otg->gadget->bam2bam_func_enabled);
-	} else {
-		dev_dbg(phy->dev, "host mode BAM not enabled\n");
-	}
+	msm_usb_bam_enable(CI_CTRL, false);
 
 	return 0;
 }
@@ -1812,9 +1818,11 @@ static void msm_otg_notify_charger(struct msm_otg *motg, unsigned mA)
 
 	/*
 	 * This condition will be true when usb cable is disconnected
-	 * during bootup before charger detection mechanism starts.
+	 * during bootup before enumeration. Check charger type also
+	 * to avoid clearing online flag in case of valid charger.
 	 */
-	if (motg->online && motg->cur_power == 0 && mA == 0)
+	if (motg->online && motg->cur_power == 0 && mA == 0 &&
+			(motg->chg_type == USB_INVALID_CHARGER))
 		msm_otg_set_online_status(motg);
 
 	if (motg->cur_power == mA)
@@ -1954,6 +1962,8 @@ static void msm_otg_start_host(struct usb_otg *otg, int on)
 		msm_otg_perf_vote_update(motg, false);
 		pm_qos_remove_request(&motg->pm_qos_req_dma);
 
+		pm_runtime_disable(&hcd->self.root_hub->dev);
+		pm_runtime_barrier(&hcd->self.root_hub->dev);
 		usb_remove_hcd(hcd);
 		msm_otg_reset(&motg->phy);
 
@@ -3754,10 +3764,11 @@ set_msm_otg_perf_mode(struct device *dev, struct device_attribute *attr,
 		ret = clk_set_rate(motg->core_clk, clk_rate);
 		if (ret)
 			pr_err("sys_clk set_rate fail:%d %ld\n", ret, clk_rate);
+		msm_otg_dbg_log_event(&motg->phy, "OTG PERF SET",
+							clk_rate, ret);
 	} else {
 		pr_err("usb sys_clk rate is undefined\n");
 	}
-	msm_otg_dbg_log_event(&motg->phy, "OTG PERF SET", clk_rate, ret);
 
 	return count;
 }
@@ -4519,7 +4530,7 @@ static int msm_otg_probe(struct platform_device *pdev)
 		ret = -ENOMEM;
 		goto devote_bus_bw;
 	}
-	dev_info(&pdev->dev, "OTG regs = %p\n", motg->regs);
+	dev_info(&pdev->dev, "OTG regs = %pK\n", motg->regs);
 
 	if (pdata->enable_sec_phy) {
 		res = platform_get_resource_byname(pdev,
