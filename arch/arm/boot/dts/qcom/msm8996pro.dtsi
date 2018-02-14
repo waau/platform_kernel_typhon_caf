@@ -1331,7 +1331,7 @@
 &soc {
 	qcom,freq-mitigation-value = <1056000>;
 	qcom,msm-thermal {
-		qcom,poll-ms = <50>;
+		qcom,poll-ms = <100>;
 		qcom,limit-temp = <80>;
 		qcom,core-limit-temp = <90>;
 		msm_thermal_freq: qcom,vdd-apps-rstr {

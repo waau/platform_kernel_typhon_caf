@@ -558,7 +558,7 @@ enum aicl_short_deglitch_voters {
 };
 
 #ifdef CONFIG_LGE_PM_DEBUG
-static int smbchg_debug_mask = PR_INTERRUPT | PR_STATUS | PR_PM | PR_LGE;
+static int smbchg_debug_mask = 0;
 #else
 static int smbchg_debug_mask;
 #endif
